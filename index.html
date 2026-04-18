@@ -1,1 +1,251 @@
 
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+  <meta
+    name="description"
+    content="Price Check App - Upload CSV and validate TP/SP pricing issues."
+  />
+  <title>Price Check App</title>
+
+  <link rel="icon" href="./assets/favicon.ico" />
+  <link rel="stylesheet" href="./css/reset.css" />
+  <link rel="stylesheet" href="./css/variables.css" />
+  <link rel="stylesheet" href="./css/layout.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/table.css" />
+  <link rel="stylesheet" href="./css/responsive.css" />
+</head>
+
+<body>
+  <div class="app-shell">
+
+    <!-- HEADER -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="brand-mark">₹</div>
+        <div class="brand-copy">
+          <h1>Price Check App</h1>
+          <p>Marketplace Selling Price Validation</p>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <button id="refreshMasterBtn" class="btn btn-secondary" type="button">
+          Refresh Master
+        </button>
+
+        <button id="exportBtn" class="btn btn-primary" type="button" disabled>
+          Export Report
+        </button>
+      </div>
+    </header>
+
+    <!-- MAIN -->
+    <main class="main-layout">
+
+      <!-- UPLOAD SECTION -->
+      <section class="panel hero-panel">
+        <div class="hero-grid">
+
+          <div class="hero-left">
+            <h2>Upload Order CSV</h2>
+            <p>
+              Upload your exported sales file. App will validate SKU mapping,
+              TP violations, invalid prices and marketplace mismatches.
+            </p>
+
+            <div class="upload-box" id="uploadBox">
+              <input
+                type="file"
+                id="csvFileInput"
+                accept=".csv,text/csv"
+                hidden
+              />
+
+              <button
+                id="browseBtn"
+                class="btn btn-primary btn-lg"
+                type="button"
+              >
+                Choose CSV File
+              </button>
+
+              <span id="fileNameLabel" class="file-name">
+                No file selected
+              </span>
+            </div>
+
+            <div class="hero-meta">
+              <span class="pill">CSV Upload</span>
+              <span class="pill">Fast Browser Processing</span>
+              <span class="pill">Export Errors</span>
+            </div>
+          </div>
+
+          <div class="hero-right">
+            <div class="status-card">
+              <div class="status-row">
+                <span>Master Sheet</span>
+                <strong id="masterStatus">Not Loaded</strong>
+              </div>
+
+              <div class="status-row">
+                <span>Uploaded Rows</span>
+                <strong id="uploadRowsCount">0</strong>
+              </div>
+
+              <div class="status-row">
+                <span>Issues Found</span>
+                <strong id="issueRowsCount">0</strong>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- KPI CARDS -->
+      <section class="kpi-grid">
+
+        <div class="kpi-card">
+          <span class="kpi-label">Total Uploaded</span>
+          <strong class="kpi-value" id="kpiTotalRows">0</strong>
+        </div>
+
+        <div class="kpi-card">
+          <span class="kpi-label">Errors Found</span>
+          <strong class="kpi-value danger" id="kpiErrors">0</strong>
+        </div>
+
+        <div class="kpi-card">
+          <span class="kpi-label">TP Violations</span>
+          <strong class="kpi-value warning" id="kpiTpViolations">0</strong>
+        </div>
+
+        <div class="kpi-card">
+          <span class="kpi-label">MP Mismatch</span>
+          <strong class="kpi-value" id="kpiMpMismatch">0</strong>
+        </div>
+
+        <div class="kpi-card">
+          <span class="kpi-label">SKU Not Found</span>
+          <strong class="kpi-value" id="kpiSkuNotFound">0</strong>
+        </div>
+
+        <div class="kpi-card">
+          <span class="kpi-label">Total Loss ₹</span>
+          <strong class="kpi-value danger" id="kpiLoss">0</strong>
+        </div>
+
+      </section>
+
+      <!-- FILTERS -->
+      <section class="panel sticky-filters">
+        <div class="filters-grid">
+
+          <div class="field">
+            <label for="issueFilter">Issue Type</label>
+            <select id="issueFilter">
+              <option value="">All Issues</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="channelFilter">Channel</label>
+            <select id="channelFilter">
+              <option value="">All Channels</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="skuSearch">SKU Search</label>
+            <input
+              type="text"
+              id="skuSearch"
+              placeholder="Enter SKU"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="field">
+            <label for="orderSearch">Order Search</label>
+            <input
+              type="text"
+              id="orderSearch"
+              placeholder="Enter Order Code"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="field action-field">
+            <label>&nbsp;</label>
+            <button id="clearFiltersBtn" class="btn btn-secondary" type="button">
+              Clear Filters
+            </button>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- REPORT -->
+      <section class="panel report-panel">
+
+        <div class="panel-head">
+          <h3>Issue Report</h3>
+          <span id="tableCountBadge" class="badge">0 Rows</span>
+        </div>
+
+        <!-- LOADER -->
+        <div id="loaderState" class="state-box hidden">
+          <div class="spinner"></div>
+          <p>Processing file...</p>
+        </div>
+
+        <!-- EMPTY -->
+        <div id="emptyState" class="state-box">
+          <h4>No Report Yet</h4>
+          <p>Upload CSV file to begin validation.</p>
+        </div>
+
+        <!-- TABLE -->
+        <div id="tableWrap" class="table-wrap hidden">
+          <table class="report-table" id="reportTable">
+            <thead>
+              <tr>
+                <th>Issue Type</th>
+                <th>Channel Name</th>
+                <th>MP Name</th>
+                <th>Master MP</th>
+                <th>Display Order Code</th>
+                <th>Item SKU Code</th>
+                <th>Selling Price</th>
+                <th>TP</th>
+                <th>Difference</th>
+              </tr>
+            </thead>
+
+            <tbody id="reportTableBody">
+              <!-- JS inject -->
+            </tbody>
+          </table>
+        </div>
+
+      </section>
+
+    </main>
+
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
